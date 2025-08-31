@@ -2,6 +2,7 @@
 name = "Chaos"
 version = "0.1.0"
 edition = "2024"
+description = "Utilitary program to snapshot Ethereum state in reth client."
 
 [dependencies]
 clap = "4.5.42"
