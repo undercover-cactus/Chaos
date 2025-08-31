@@ -9,6 +9,17 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
+use clap::Parser;
+
+/// Simple program to greet a person
+#[derive(Parser, Debug)]
+#[command(version, about = "Utilitary program to snapshot Ethereum state in reth client.", long_about = None)]
+struct Args {
+    /// Reth database path to read the state from
+    #[arg(short, long)]
+    database_path: String,
+}
+
 #[derive(Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 struct Contract {
     address: String,
@@ -17,11 +28,24 @@ struct Contract {
 }
 
 fn main() {
-    println!("Chaos");
+    println!(
+        "
+ ▄████▄   ██░ ██  ▄▄▄       ▒█████    ██████ 
+▒██▀ ▀█  ▓██░ ██▒▒████▄    ▒██▒  ██▒▒██    ▒ 
+▒▓█    ▄ ▒██▀▀██░▒██  ▀█▄  ▒██░  ██▒░ ▓██▄   
+▒▓▓▄ ▄██▒░▓█ ░██ ░██▄▄▄▄██ ▒██   ██░  ▒   ██▒
+▒ ▓███▀ ░░▓█▒░██▓ ▓█   ▓██▒░ ████▓▒░▒██████▒▒
+░ ░▒ ▒  ░ ▒ ░░▒░▒ ▒▒   ▓▒█░░ ▒░▒░▒░ ▒ ▒▓▒ ▒ ░
+  ░  ▒    ▒ ░▒░ ░  ▒   ▒▒ ░  ░ ▒ ▒░ ░ ░▒  ░ ░
+░         ░  ░░ ░  ░   ▒   ░ ░ ░ ▒  ░  ░  ░  
+░ ░       ░  ░  ░      ░  ░    ░ ░        ░  
+░                                            
+    "
+    );
 
-    // TODO CLI
+    let args = Args::parse();
 
-    let path = Path::new("./db");
+    let path = Path::new(&args.database_path);
     let database_args = DatabaseArguments::new(ClientVersion::default());
 
     let db = open_db_read_only(path, database_args).unwrap();
@@ -34,7 +58,7 @@ fn main() {
         let table_db = tx.inner.open_db(Some("Bytecodes")).unwrap();
 
         let stats = tx.inner.db_stat(&table_db).unwrap();
-        dbg!(stats.entries());
+        println!("Number of contracts to backup : {}", stats.entries());
 
         let mut cursor_bytecodes = tx.cursor_read::<RawTable<reth_db::Bytecodes>>().unwrap();
 
@@ -82,6 +106,7 @@ fn main() {
         });
     });
 
+    println!("Saving into state.json");
     let mut file = File::create("state.json").unwrap();
     file.write_all(serde_json::to_string(&state).unwrap().as_bytes())
         .unwrap();
