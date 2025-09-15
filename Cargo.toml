@@ -1,5 +1,5 @@
 [package]
-name = "Chaos"
+name = "chaos"
 version = "0.1.0"
 edition = "2024"
 description = "Utilitary program to snapshot Ethereum state in reth client."

@@ -3,17 +3,6 @@
 version = 4
 
 [[package]]
-name = "Chaos"
-version = "0.1.0"
-dependencies = [
- "clap",
- "hex",
- "reth-db",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "ahash"
 version = "0.8.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -753,6 +742,17 @@ name = "cfg-if"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2fd1289c04a9ea8cb22300a459a72a385d7c73d3259e2ed7dcb2af674838cfa9"
+
+[[package]]
+name = "chaos"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "hex",
+ "reth-db",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "chrono"
