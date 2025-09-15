@@ -1,4 +1,3 @@
-use clap::builder::Str;
 use reth_db::RawTable;
 use reth_db::transaction::DbTx;
 use reth_db::{ClientVersion, cursor::DbCursorRO, mdbx::DatabaseArguments, open_db_read_only};
@@ -20,11 +19,11 @@ struct Args {
     database_path: String,
 }
 
-#[derive(Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 struct Contract {
     address: String,
     code: String,
-    storage: Vec<(String, String)>,
+    storage: HashMap<String, String>,
 }
 
 fn main() {
@@ -50,7 +49,7 @@ fn main() {
 
     let db = open_db_read_only(path, database_args).unwrap();
 
-    let mut state: HashSet<Contract> = HashSet::new();
+    let mut state: HashMap<u32, Contract> = HashMap::new();
 
     let _ = db.view(|tx| {
         tx.inner.disable_timeout(); // Disable timeout to be sure to read the table entirely
@@ -70,7 +69,7 @@ fn main() {
             let bytecodes = value.1.value().unwrap().bytecode().to_string();
 
             let mut contract_address = String::new();
-            let mut storage: Vec<(String, String)> = vec![];
+            let mut storage: HashMap<String, String> = HashMap::new();
 
             let mut cursor_accounts = tx
                 .cursor_read::<RawTable<reth_db::PlainAccountState>>()
@@ -91,18 +90,23 @@ fn main() {
 
                 if contract_address == value.0.key().unwrap().to_string() {
                     let storage_entry = value.1.value().unwrap();
-                    storage.push((
+                    let storage_value = storage_entry.value.to_be_bytes_vec();
+
+                    storage.insert(
                         storage_entry.key.to_string(),
-                        storage_entry.value.to_string(),
-                    ));
+                        format!("0x{}", hex::encode(storage_value)),
+                    );
                 }
             });
 
-            state.insert(Contract {
-                address: contract_address,
-                code: bytecodes,
-                storage,
-            });
+            state.insert(
+                state.len() as u32,
+                Contract {
+                    address: contract_address,
+                    code: bytecodes,
+                    storage,
+                },
+            );
         });
     });
 
