@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             asset_name: chaos-linux-amd64
           - os: macos-latest
             asset_name: chaos-macos-amd64
