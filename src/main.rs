@@ -68,45 +68,45 @@ fn main() {
             println!("bytecode hash {}", hex::encode(bytecode_hash));
             let bytecodes = value.1.value().unwrap().bytecode().to_string();
 
-            let mut contract_address = String::new();
-            let mut storage: HashMap<String, String> = HashMap::new();
-
             let mut cursor_accounts = tx
                 .cursor_read::<RawTable<reth_db::PlainAccountState>>()
                 .unwrap();
             cursor_accounts.walk(None).unwrap().for_each(|result| {
                 let value = result.unwrap();
 
+                let mut storage: HashMap<String, String> = HashMap::new();
+
                 if bytecode_hash == &value.1.value().unwrap().get_bytecode_hash().0.to_vec() {
-                    contract_address = value.0.key().unwrap().to_string();
-                }
-            });
+                    // Loop over all the account that have this byte code
+                    let contract_address = value.0.key().unwrap().to_string();
 
-            let mut cursor_storage = tx
-                .cursor_read::<RawTable<reth_db::PlainStorageState>>()
-                .unwrap();
-            cursor_storage.walk(None).unwrap().for_each(|result| {
-                let value = result.unwrap();
+                    let mut cursor_storage = tx
+                        .cursor_read::<RawTable<reth_db::PlainStorageState>>()
+                        .unwrap();
+                    cursor_storage.walk(None).unwrap().for_each(|result| {
+                        let value = result.unwrap();
 
-                if contract_address == value.0.key().unwrap().to_string() {
-                    let storage_entry = value.1.value().unwrap();
-                    let storage_value = storage_entry.value.to_be_bytes_vec();
+                        if contract_address == value.0.key().unwrap().to_string() {
+                            let storage_entry = value.1.value().unwrap();
+                            let storage_value = storage_entry.value.to_be_bytes_vec();
 
-                    storage.insert(
-                        storage_entry.key.to_string(),
-                        format!("0x{}", hex::encode(storage_value)),
+                            storage.insert(
+                                storage_entry.key.to_string(),
+                                format!("0x{}", hex::encode(storage_value)),
+                            );
+                        }
+                    });
+
+                    state.insert(
+                        state.len() as u32,
+                        Contract {
+                            address: contract_address,
+                            code: bytecodes.clone(),
+                            storage,
+                        },
                     );
                 }
             });
-
-            state.insert(
-                state.len() as u32,
-                Contract {
-                    address: contract_address,
-                    code: bytecodes,
-                    storage,
-                },
-            );
         });
     });
 
